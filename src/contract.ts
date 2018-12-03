@@ -49,7 +49,7 @@ export const registerUser = createContract('registerUser')
 async function start() {
   await registerUser({
     username: 'foo',
-    password: 'aabaaba',
+    password: 'a',
   });
 }
 

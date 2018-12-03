@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "example1": "ts-node -T examples/example1.ts | bunyan -o short",
+    "example2": "ts-node -T examples/example2.ts | bunyan -o short",
+    "example3": "ts-node -T examples/example3.ts | bunyan -o short",
+    "lint": "tslint -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
+    "test": "yar run lint && yar run tsc --noEmit && yar run jest --coverage --no-cache"
   },
   "repository": {
     "type": "git",
@@ -26,5 +30,30 @@
     "express": "^4.16.4",
     "graphql-yoga": "^1.16.7",
     "veni": "^0.1.1"
+  },
+  "jest": {
+    "transform": {
+      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testMatch": [
+      "**/*.test.ts"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/test/"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 90,
+        "functions": 95,
+        "lines": 95,
+        "statements": 95
+      }
+    }
   }
 }

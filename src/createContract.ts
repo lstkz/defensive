@@ -46,7 +46,8 @@ export const createContract = (name: string) => {
 
   contract.fn = (fn: any) => {
     const wrappedFunction = (...args: any[]) => {
-      const logger = config.getLogger(name);
+      const [serviceName, methodName] = name.split('#');
+      const logger = config.getLogger(serviceName);
       const withValidation = wrapValidate({
         keysSchema: schema,
         method: fn,
@@ -57,7 +58,7 @@ export const createContract = (name: string) => {
       const withLogging = wrapLog({
         logger,
         method: withValidation,
-        methodName: name,
+        methodName: methodName || name,
         paramNames: params,
         config,
         removeOutput: options.removeOutput,

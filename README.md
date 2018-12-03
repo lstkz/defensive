@@ -1,1 +1,194 @@
 # defensive
+
+
+`defensive` is a TypeScript library for creating contracts (aka services) with a proper validation and logging.  
+It depends on [veni](https://github.com/BetterCallSky/veni) (validator) and [bunyan](https://github.com/trentm/node-bunyan) (logger)  
+
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/BetterCallSky/defensive.svg)](https://greenkeeper.io/)
+[![Travis](https://img.shields.io/travis/BetterCallSky/defensive.svg)](https://travis-ci.org/BetterCallSky/defensive)
+[![codecov](https://codecov.io/gh/BetterCallSky/defensive/branch/master/graph/badge.svg)](https://codecov.io/gh/BetterCallSky/defensive)
+[![Dev Dependencies](https://david-dm.org/BetterCallSky/defensive/dev-status.svg)](https://david-dm.org/BetterCallSky/defensive?type=dev)
+
+
+### About
+The motivation is to provide a library for [contract programming](https://en.wikipedia.org/wiki/Design_by_contract) that works well with TypeScript.  
+There are many existing libraries for data validation that rely heavily on decorator annotations. Unfortunately, decorators have many flaws:
+- it's an experimental feature, and its syntax is going to change,
+- redundant syntax because we must create special classes instead of using plain objects,
+- it's a runtime feature, and there are some [bugs related to reflection](https://github.com/kulshekhar/ts-jest/issues/439),
+- no type inference, any typos or mistakes cause a runtime error instead of a compilation error.
+
+ Since Typescript 2.8, it's possible to use [conditional types](https://github.com/Microsoft/TypeScript/pull/21496), that allow us to map one type to another. It's a powerful feature that can extract a Typescript interface from javascript objects (implemented by [veni](https://github.com/BetterCallSky/veni)).
+
+ See the example below. There are no TypeScript annotations. It's pure JavaScript code, but we have type checking inferred from Veni.
+
+
+![Alt text](./.github/type-checking.gif)
+
+### Features
+
+- Full type inference for input parameters.
+- Input validation and normalization (example: string type `"2"` to number type `2`).
+- Input logging (input parameters):
+```
+myService: ENTER methodName: {param1: 'foo', param2: 'bar'}
+```
+- Output logging (sync and async):
+```
+myService:  EXIT methodName: {result: 'foobar', anotherProp: 'bar'}
+```
+- Error logging with input parameters (see example below).
+- Bindings to 3rd party frameworks (see example below).
+
+### Getting Started
+
+```bash
+npm install defensive
+```
+```bash
+yarn add defensive
+```
+
+## Example usage 
+
+```ts
+// services/CalcService.ts
+import { createContract } from 'defensive';
+import { V } from 'veni';
+
+export const add = createContract('CalcService#add')
+  .options({ sync: true })
+  .params('a', 'b')
+  .schema({
+    a: V.number(),
+    b: V.number(),
+  })
+  .fn((a, b) => a + b);
+
+add(1, 3); // returns 4
+add('5' as any, '6' as any); // returns 11, input parameters are converted to number types
+add('1' as any, { foo: 'bar' } as any); // logs and throws an error
+
+```
+
+use service
+```ts
+// app.ts
+import { add } from './services/CalcService';
+
+
+add(1, 3); // returns 4
+add('5' as any, '6' as any); // returns 11, input parameters are converted to number types
+add('1' as any, { foo: 'bar' } as any); // logs and throws an error
+// NOTE: you shouldn't use casting `as any` in your code. It's used only for a demonstration purpose.
+// The service is expected to be called with unknown input (for example: req.body).
+```
+
+![Alt text](./.github/example1.png)
+
+See example under `examples/example1.ts`. Run it using `npm run example1`.
+
+
+## Async example usage
+
+file `services/UserService.ts`
+```ts
+import { createContract } from 'defensive';
+import { V } from 'veni';
+
+// UserService.ts
+
+export const createUser = createContract('UserService#createUser')
+  .params('values')
+  .schema({
+    values: V.object().keys({
+      name: V.string().optional(),
+      email: V.string().email(),
+      password: V.string().min(5),
+    }),
+  })
+  .fn(async values => {
+    // do something with values
+    // UserModel.create(values);
+    const id = 1;
+    return id;
+  });
+```
+use service
+
+```ts
+// app.ts
+import { createUser } from './services/UserService';
+
+await createUser({
+  name: 'john',
+  email: 'john@example.com',
+  password: 'secret',
+}); // ok
+await createUser({
+  name: 'john',
+  email: 'invalid email',
+  password: 'secret',
+}); // throws an error
+```
+
+![Alt text](./.github/example2.png)
+
+See example under `examples/example2.ts`. Run it using `npm run example2`.  
+
+## Removing security information
+By default properties `password`, `token`, `accessToken` are removed from logging.  
+Additionally you set options to `{removeOutput: true}` to remove the method result.  
+Example:
+
+file `services/SecurityService.ts`
+```ts
+// services/SecurityService.ts
+import { createContract } from 'defensive';
+import { V } from 'veni';
+ 
+const hashPassword = createContract('SecurityService#hashPassword')
+  .options({ sync: true })
+  .params('password')
+  .schema({
+    password: V.string(),
+  })
+  .fn(password => 'ba817ef716');
+
+hashPassword('secret-password');
+```
+
+![Alt text](./.github/example3.png)
+
+See example under `examples/example3.ts`. Run it using `npm run example3`.
+
+
+### Special properties
+if the parameter name is `req` it's assumed that the object is an express request.  
+Only properties are logged: `method`, `url`, `headers`, `remoteAddress`, `remotePort`.  
+
+
+if the parameter name is `res` it's assumed that the object is an express response.  
+Only properties are logged: `statusCode`, `header`.  
+
+### Notes
+- The wrapped function must have 0-4 arguments. 
+- You can always override the inferred type. For example, if you to skip strict validation of properties.
+
+```ts
+createContract('CalcService#add')
+  .options({ sync: true })
+  .params('foo')
+  .schema({
+    foo: V.object(),
+  })
+  .fn((foo: SomeExistingObject) => {
+
+  });
+
+```
+
+
+### License
+MIT
