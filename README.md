@@ -279,11 +279,15 @@ Such an approach can work for small apps, but it can complicate things if the ap
 For example:  
 You create an endpoint `/POST register` for user registration.  
 After some time, you must create a command line script that will register a default user.  
-You can't call the express router from the command line (you can try it's a hacky solution), and you must either extract logic to common file (util or helper) or duplicate code. The application is much easier to understand if the business operations are organized in contracts/services instead of chaotic helper methods.
+You can't call the express router from the command line (you can try but it's a hacky solution), and you must either extract logic to common file (util or helper) or duplicate code. The application is much easier to understand if the business operations are organized in contracts/services instead of chaotic helper methods.
 
 2. Why do you recommend to keep bindings and services in a single file?  
   
 Most of the services are usually small, and there is 1:1 mapping between them and REST endpoints. It can be overwhelming for the developer when adding a new simple endpoint requires editing multiple files (controllers/services/route config).
+
+3. Why bindings are not provided by this library?  
+  
+It's difficult to create a generic binding that will work well for all users. It's recommended to create a minimal binding that all only needed in your app.
 
 ### License
 MIT

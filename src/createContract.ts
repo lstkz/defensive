@@ -10,7 +10,13 @@ import { SchemaMap } from 'veni';
 import { ContractBinding } from './ContractBinding';
 import { getDefaultConfig } from './defaultConfig';
 
-export const createContract = (name: string) => {
+export const createContract = (signature: string) => {
+  const [serviceName, methodName] = signature.split('#');
+  if (!methodName) {
+    throw new Error(
+      `Invalid signature. Must be in format "service-name#method-name". Received "${signature}".`
+    );
+  }
   const contract = {} as any;
   let config: ContractConfig = getDefaultConfig();
   let options: ContractOptions = {
@@ -46,7 +52,6 @@ export const createContract = (name: string) => {
 
   contract.fn = (fn: any) => {
     const wrappedFunction = (...args: any[]) => {
-      const [serviceName, methodName] = name.split('#');
       const logger = config.getLogger(serviceName);
       const withValidation = wrapValidate({
         keysSchema: schema,
@@ -58,7 +63,7 @@ export const createContract = (name: string) => {
       const withLogging = wrapLog({
         logger,
         method: withValidation,
-        methodName: methodName || name,
+        methodName: methodName,
         paramNames: params,
         config,
         removeOutput: options.removeOutput,

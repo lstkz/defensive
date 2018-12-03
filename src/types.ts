@@ -65,10 +65,6 @@ interface Contract2<
   ): T;
 }
 
-export interface ContractMeta<TSchema> {
-  getSchema(): TSchema;
-}
-
 interface Contract1<
   ARG1 extends string,
   TSchema extends { [key in ARG1]: Schema }
@@ -80,9 +76,22 @@ interface Contract1<
   ): T & ContractBinding<T> & ContractMeta<TSchema>;
 }
 
+interface Contract0<TSchema extends {}> {
+  schema<T extends {}>(param: T): Contract0<T>;
+
+  fn<T extends () => R, R>(
+    fn: T
+  ): T & ContractBinding<T> & ContractMeta<TSchema>;
+}
+
+export interface ContractMeta<TSchema> {
+  getSchema(): TSchema;
+}
+
 export interface Contract {
   config(config: Partial<ContractConfig>): this;
   options(options: Partial<ContractOptions>): this;
+  params(): Contract0<any>;
   params<ARG1 extends string>(arg1: ARG1): Contract1<ARG1, any>;
   params<ARG1 extends string, ARG2 extends string>(
     arg1: ARG1,
