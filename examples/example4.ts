@@ -1,56 +1,75 @@
-import './ExpressContract';
-import { createContract } from './createContract';
+import { createContract, ContractBinding } from '../src';
 import { V } from 'veni';
+import { Request, Response, default as express } from 'express';
 
-export const inc = createContract('inc')
-  .params('n')
-  .schema({
-    n: V.number(),
-  })
-  .fn(n => {
-    return n + 1;
-  })
-  .express({
-    method: 'get',
-    path: '/inc',
-    handler: (req, res) =>
-      res.json({
-        result: inc(req.body.id),
-      }),
-  });
+// Creating binding definition
+// bindings.ts
 
-export const registerUser = createContract('registerUser')
-  .params('values')
+ContractBinding.prototype.express = function(options) {
+  if (!this.fn.expressOptions) {
+    this.fn.expressOptions = [];
+  }
+  this.fn.expressOptions.push(options);
+  return this.fn as any;
+};
+
+interface ExpressOptions {
+  auth?: boolean;
+  method: 'get' | 'post' | 'put' | 'delete' | 'patch';
+  path: string;
+  handler(req: Request, res: Response): void;
+}
+
+declare module '../src/ContractBinding' {
+  interface ContractBinding<T> {
+    expressOptions: ExpressOptions[];
+    express(options: ExpressOptions): T & ContractBinding<T>;
+  }
+}
+
+// Create service
+// UserService.ts
+
+export const getUser = createContract('User#getUser')
+  .params('id')
   .schema({
-    values: V.object().keys({
-      username: V.string()
-        .min(3)
-        .max(10),
-      password: V.string()
-        .min(5)
-        .optional(),
-    }),
+    id: V.number(),
   })
-  .fn(async values => {
+  .fn(async id => {
     return {
-      id: 10,
-      username: values.username,
+      id,
+      username: 'name',
     };
   })
   .express({
-    method: 'post',
-    path: '/register',
-    handler: async (req, res) =>
-      res.json({
-        user: await registerUser(req.body),
-      }),
+    auth: true,
+    method: 'get',
+    path: '/users/me',
+    handler(req, res) {
+      res.json(getUser(req.user.id));
+    },
+  })
+  .express({
+    method: 'get',
+    path: '/users/:id',
+    handler(req, res) {
+      res.json(getUser(req.params.id));
+    },
   });
 
-async function start() {
-  await registerUser({
-    username: 'foo',
-    password: 'a',
-  });
-}
+// Main entry point
+// app.ts
 
-start();
+const app = express();
+
+const authMiddleware = (req: Request, res: Response) => {
+  // check if user is logged in
+};
+
+getUser.expressOptions.forEach(options => {
+  const middleware = [options.handler];
+  if (options.auth) {
+    middleware.unshift(authMiddleware);
+  }
+  app[options.method](options.path, ...middleware);
+});
