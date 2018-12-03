@@ -46,7 +46,7 @@ export const getUser = createContract('User#getUser')
     method: 'get',
     path: '/users/me',
     handler(req, res) {
-      res.json(getUser(req.user.id));
+      res.json(getUser((req as any).user.id));
     },
   })
   .express({

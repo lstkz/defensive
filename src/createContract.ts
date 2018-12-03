@@ -63,7 +63,7 @@ export const createContract = (signature: string) => {
       const withLogging = wrapLog({
         logger,
         method: withValidation,
-        methodName: methodName,
+        methodName,
         paramNames: params,
         config,
         removeOutput: options.removeOutput,

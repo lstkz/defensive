@@ -5,7 +5,6 @@ import { createContract } from '../src/createContract';
 import { setDefaultConfig } from '../src/defaultConfig';
 
 let logger: Logger;
-let contract: Contract;
 
 beforeEach(() => {
   logger = getLogger();

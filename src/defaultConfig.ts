@@ -5,7 +5,7 @@ let defaultId = 0;
 
 const loggerMap: Record<string, Logger> = {};
 
-let defaultConfig: ContractConfig = {
+const defaultConfig: ContractConfig = {
   removeFields: ['password', 'token', 'accessToken'],
   debug: true,
   depth: 4,
