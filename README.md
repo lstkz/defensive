@@ -189,13 +189,13 @@ createContract('CalcService#add')
 
 ```
 
-### Creating bindings
-It's possible to extend the contract prototype and add a custom metadata that can be used to mount the contract in 3rd party frameworks or library.  
-For example: you can create your on binding for an express app, graphql app, kafka events or cron jobs.  
+## Creating bindings
+It's possible to extend the contract prototype and add custom metadata that can be used to mount the contract in 3rd party frameworks or library.  
+For example: you can create your own binding for an express app, graphql app, kafka events or cron jobs.  
 
 Example binding for Express  
 ```ts
-import { createContract, ContractBinding } from '../src';
+import { createContract, ContractBinding } from 'defensive';
 import { V } from 'veni';
 import { Request, Response, default as express } from 'express';
 
@@ -217,7 +217,7 @@ interface ExpressOptions {
   handler(req: Request, res: Response): void;
 }
 
-declare module '../src/ContractBinding' {
+declare module 'defensive/ContractBinding' {
   interface ContractBinding<T> {
     expressOptions: ExpressOptions[];
     express(options: ExpressOptions): T & ContractBinding<T>;
@@ -272,6 +272,18 @@ getUser.expressOptions.forEach(options => {
 });
 ```
 
+## FAQ
+1. Why can't I just use [express validator](https://express-validator.github.io/docs/) and write code directly in controllers?  
+
+Such an approach can work for small apps, but it can complicate things if the application is growing. It's a common scenario when you write the code in one place, and then you must reuse it in another place.  
+For example:  
+You create an endpoint `/POST register` for user registration.  
+After some time, you must create a command line script that will register a default user.  
+You can't call the express router from the command line (you can try it's a hacky solution), and you must either extract logic to common file (util or helper) or duplicate code. The application is much easier to understand if the business operations are organized in contracts/services instead of chaotic helper methods.
+
+2. Why do you recommend to keep bindings and services in a single file?  
+  
+Most of the services are usually small, and there is 1:1 mapping between them and REST endpoints. It can be overwhelming for the developer when adding a new simple endpoint requires editing multiple files (controllers/services/route config).
 
 ### License
 MIT
