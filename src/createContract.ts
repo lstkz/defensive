@@ -7,7 +7,7 @@ import {
 import { wrapValidate } from './wrapValidate';
 import { wrapLog } from './wrapLog';
 import { SchemaMap } from 'veni';
-import { ContractBinding } from './ContractBinding';
+import { ContractBinding } from './index';
 import { getDefaultConfig } from './defaultConfig';
 
 export const createContract = (signature: string) => {

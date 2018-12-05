@@ -20,7 +20,7 @@ interface ExpressOptions {
   handler(req: Request, res: Response): void;
 }
 
-declare module '../src/ContractBinding' {
+declare module '../src' {
   interface ContractBinding<T> {
     expressOptions: ExpressOptions[];
     express(options: ExpressOptions): T & ContractBinding<T>;

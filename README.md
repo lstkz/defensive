@@ -217,7 +217,7 @@ interface ExpressOptions {
   handler(req: Request, res: Response): void;
 }
 
-declare module 'defensive/ContractBinding' {
+declare module 'defensive' {
   interface ContractBinding<T> {
     expressOptions: ExpressOptions[];
     express(options: ExpressOptions): T & ContractBinding<T>;
