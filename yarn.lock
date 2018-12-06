@@ -3667,10 +3667,10 @@ validate-npm-package-license@^3.0.1:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
 
-veni@^0.1.4:
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/veni/-/veni-0.1.4.tgz#960c42fdf189cacf2331fddf759dc26f27a93a73"
-  integrity sha512-NzktNmrSjF7LvKjR5QA4OvGwd+pB/4lA5ZZBhR4WRg+L8lDfK7frp7fyND3T31Rcy0oDPPqjcWTrRjMD6Q6/CA==
+veni@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/veni/-/veni-0.2.0.tgz#5f18b6760a3cd5dce35f05c379d3d47befa10017"
+  integrity sha512-eG2pQh1es42Y0Rr2lkVAnJoUonXQ9L+aHYfrNsz2g/PkUdqsskXk+VGEPTx+eihlsYUlmMzk8dNVfcSaG/FTew==
 
 verror@1.10.0:
   version "1.10.0"
