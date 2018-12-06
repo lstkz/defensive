@@ -23,7 +23,7 @@ interface Contract4<
     R
   >(
     fn: T
-  ): T;
+  ): T & ContractBinding<T> & ContractMeta<TSchema>;
 }
 
 interface Contract3<
@@ -45,7 +45,7 @@ interface Contract3<
     R
   >(
     fn: T
-  ): T;
+  ): T & ContractBinding<T> & ContractMeta<TSchema>;
 }
 
 interface Contract2<
@@ -65,7 +65,7 @@ interface Contract2<
     R
   >(
     fn: T
-  ): T;
+  ): T & ContractBinding<T> & ContractMeta<TSchema>;
 }
 
 interface Contract1<
