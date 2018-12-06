@@ -19,7 +19,7 @@ interface Contract4<
       arg2: Convert<TSchema[ARG2]>,
       arg3: Convert<TSchema[ARG3]>,
       arg4: Convert<TSchema[ARG4]>
-    ) => R,
+    ) => R | void,
     R
   >(
     fn: T
@@ -41,7 +41,7 @@ interface Contract3<
       arg1: Convert<TSchema[ARG1]>,
       arg2: Convert<TSchema[ARG2]>,
       arg3: Convert<TSchema[ARG3]>
-    ) => R,
+    ) => R | void,
     R
   >(
     fn: T
@@ -58,7 +58,10 @@ interface Contract2<
   ): Contract2<ARG1, ARG2, T>;
 
   fn<
-    T extends (arg1: Convert<TSchema[ARG1]>, arg2: Convert<TSchema[ARG2]>) => R,
+    T extends (
+      arg1: Convert<TSchema[ARG1]>,
+      arg2: Convert<TSchema[ARG2]>
+    ) => R | void,
     R
   >(
     fn: T
@@ -71,7 +74,7 @@ interface Contract1<
 > {
   schema<T extends { [key in ARG1]: Schema }>(param: T): Contract1<ARG1, T>;
 
-  fn<T extends (arg1: Convert<TSchema[ARG1]>) => R, R>(
+  fn<T extends (arg1: Convert<TSchema[ARG1]>) => R | void, R>(
     fn: T
   ): T & ContractBinding<T> & ContractMeta<TSchema>;
 }
@@ -79,7 +82,7 @@ interface Contract1<
 interface Contract0<TSchema extends {}> {
   schema<T extends {}>(param: T): Contract0<T>;
 
-  fn<T extends () => R, R>(
+  fn<T extends () => R | void, R>(
     fn: T
   ): T & ContractBinding<T> & ContractMeta<TSchema>;
 }
