@@ -35,6 +35,6 @@
   },
   "dependencies": {
     "bunyan": "^1.8.12",
-    "veni": "^0.2.0"
+    "veni": "^0.2.9"
   }
 }

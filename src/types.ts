@@ -131,3 +131,8 @@ export interface ContractConfig {
   getLogger: (serviceName: string) => Logger;
   getNextId: () => number;
 }
+
+export interface MethodEntry {
+  signature: string;
+  args: any[];
+}
