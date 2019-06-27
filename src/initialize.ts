@@ -1,23 +1,37 @@
 import async_hooks from 'async_hooks';
 import { ContractError } from './ContractError';
 import { ContractHook } from './ContractHook';
+import { ContractConfig } from './types';
+import { _createContract } from './_createContract';
 
-interface InitializeOptions {
-  removeFields: string[];
-  debug: boolean;
-  depth: number;
-  maxArrayLength: number;
-  debugEnter: (signature: string, args: any) => void;
-  debugExit: (signature: string, result: any) => void;
-  logError: (err: ContractError) => void;
-}
+const defaultConfig: ContractConfig = {
+  removeFields: ['password', 'token', 'accessToken'],
+  debug: true,
+  depth: 4,
+  maxArrayLength: 30,
+  debugEnter: (signature, formattedInput) => {
+    // tslint:disable-next-line:no-console
+    console.log(`ENTER ${signature}:`, formattedInput);
+  },
+  debugExit: (signature, formattedOutput) => {
+    // tslint:disable-next-line:no-console
+    console.log(`EXIT ${signature}:`, formattedOutput);
+  },
+  logError: err => {
+    //
+  },
+};
 
-export function initialize<T>(options: Partial<InitializeOptions> = {}) {
+export function initialize<T>(config: Partial<ContractConfig> = {}) {
   const hook = new ContractHook();
   return {
-    createContract: () => {
-      //
-    },
+    createContract: _createContract(
+      {
+        ...config,
+        ...defaultConfig,
+      },
+      hook
+    ),
     runWithContext: (context: T, fn: (...args: any[]) => any) => {
       //
     },
@@ -25,7 +39,7 @@ export function initialize<T>(options: Partial<InitializeOptions> = {}) {
       return (null as any) as T;
     },
     disable: () => {
-      //
+      hook.disable();
     },
   };
 }
