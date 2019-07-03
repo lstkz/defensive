@@ -1,15 +1,19 @@
 import { serializeObject } from '../src/serializeObject';
+import { ContractConfig } from '../src/types';
 
-const globalConfig = {
+const globalConfig: ContractConfig = {
   removeFields: ['password', 'token', 'accessToken'],
   debug: true,
   depth: 4,
   maxArrayLength: 30,
-  getLogger(serviceName: string) {
-    return null as any;
+  debugEnter: () => {
+    //
   },
-  getNextId: () => 0,
+  debugExit: () => {
+    //
+  },
 };
+
 it('serialize undefined', () => {
   expect(serializeObject(globalConfig, undefined)).toMatchInlineSnapshot(
     `"undefined"`
@@ -44,7 +48,7 @@ it('req', () => {
     },
   };
   expect(serializeObject(globalConfig, obj)).toMatchInlineSnapshot(`
-"{ req: 
+"{ req:
    { method: 'GET',
      url: '/foo',
      headers: {},

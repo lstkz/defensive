@@ -19,6 +19,7 @@ const defaultConfig: ContractConfig = {
 
 export function initialize<T>(config: Partial<ContractConfig> = {}) {
   const hook = new ContractHook();
+  hook.enable();
   return {
     createContract: _createContract(
       {

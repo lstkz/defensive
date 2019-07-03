@@ -268,7 +268,11 @@ describe('context', () => {
     const fn2 = await createContract('myService#fn2')
       .params()
       .fn(async () => {
-        return fn1();
+        return new Promise(resolve =>
+          setTimeout(() => {
+            resolve(fn1());
+          }, 0)
+        );
       });
     await runWithContext(
       {
