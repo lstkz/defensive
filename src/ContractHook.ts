@@ -42,7 +42,7 @@ export class ContractHook {
     const asyncResource = new async_hooks.AsyncResource('ROOT_CONTRACT');
     const asyncId = asyncResource.asyncId();
     this.rootMapping.set(asyncId, asyncId);
-    await asyncResource.runInAsyncScope(fn);
+    return asyncResource.runInAsyncScope(fn);
   }
 
   enable() {

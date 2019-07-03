@@ -1,5 +1,3 @@
-import async_hooks from 'async_hooks';
-import { ContractError } from './ContractError';
 import { ContractHook } from './ContractHook';
 import { ContractConfig } from './types';
 import { _createContract } from './_createContract';
@@ -17,9 +15,6 @@ const defaultConfig: ContractConfig = {
     // tslint:disable-next-line:no-console
     console.log(`EXIT ${signature}:`, formattedOutput);
   },
-  logError: err => {
-    //
-  },
 };
 
 export function initialize<T>(config: Partial<ContractConfig> = {}) {
@@ -27,17 +22,18 @@ export function initialize<T>(config: Partial<ContractConfig> = {}) {
   return {
     createContract: _createContract(
       {
-        ...config,
         ...defaultConfig,
+        ...config,
       },
       hook
     ),
-    runWithContext: (context: T, fn: (...args: any[]) => any) => {
-      //
+    runWithContext: async (context: T, fn: () => any) => {
+      await hook.runInNewScope(() => {
+        hook.setContext(context);
+        return fn();
+      });
     },
-    getContext: () => {
-      return (null as any) as T;
-    },
+    getContext: () => hook.getContext<T>(),
     disable: () => {
       hook.disable();
     },

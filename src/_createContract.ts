@@ -64,14 +64,15 @@ export const _createContract = (config: ContractConfig, hook: ContractHook) => (
       const isNewScope = hook.isNewScope();
       try {
         if (isNewScope) {
-          await hook.runInNewScope(() => withLogging(...args));
+          const a = await hook.runInNewScope(() => withLogging(...args));
+          return a;
         } else {
           return await withLogging(...args);
         }
       } catch (e) {
         const input = _serializeInput(config, params, args);
         if (e instanceof ContractError) {
-          e.entries.push({
+          e.entries.unshift({
             signature,
             input,
           });
