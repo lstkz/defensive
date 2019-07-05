@@ -1,7 +1,5 @@
-import { V, Schema, Convert } from 'veni';
-import * as Logger from 'bunyan';
+import { Schema, Convert } from 'veni';
 import { ContractBinding } from './index';
-import { ContractError } from './ContractError';
 
 interface Contract4<
   ARG1 extends string,

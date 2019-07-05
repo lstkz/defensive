@@ -40,6 +40,7 @@ EXIT myService#methodName: {result: 'foobar', anotherProp: 'bar'}
 ```
 - Error logging with input parameters (see example below).
 - Bindings to 3rd party frameworks (see example below).
+- Context (aka continuation local storage) - passing data between function calls without using function arguments (see example below).
 
 ### Getting Started
 
@@ -136,12 +137,11 @@ import { createContract } from 'defensive';
 import { V } from 'veni';
  
 const hashPassword = createContract('SecurityService#hashPassword')
-  .options({ sync: true })
   .params('password')
   .schema({
     password: V.string(),
   })
-  .fn(password => 'ba817ef716');
+  .fn(async password => 'ba817ef716');
 
 hashPassword('secret-password');
 ```
@@ -258,6 +258,45 @@ getUser.expressOptions.forEach(options => {
 });
 ```
 
+## Using Context
+```ts
+import { initialize } from 'defensive';
+
+interface Context {
+  foo: string;
+}
+
+const { createContract, getContext, runWithContext } = initialize<Context>();
+
+const fn = createContract('myService#fn2')
+  .params()
+  .fn(async () => {
+    return new Promise(resolve =>
+      // here will be created a new scope in the event loop
+      setTimeout(() => { 
+        const context = getContext();
+        resolve(context.foo);
+      }, 0)
+    );
+  });
+runWithContext(
+  {
+    foo: 'bar',
+  },
+  async () => {
+    console.log(await fn()); // returns 'bar'
+  }
+);
+```
+```
+$ ts-node -T examples/example4.ts
+ENTER myService#fn2: { }
+EXIT myService#fn2: 'bar'
+bar
+```
+See example under `examples/example4.ts`. Run it using `npm run example4`.
+
+
 ### API
 1. `initialize` - initialize the library.
 ```ts
@@ -302,21 +341,14 @@ await runWithContext(context, async () => {
 
 4. `getContext` - get current context or throw an error if not set. The parent function must call `runWithContext`.
 ```ts
-const { createContract, getContext, runWithContext } = initialize<Context>({
-  debug: false,
-});
-const fn1 = await createContract('myService#fn1')
-  .params()
-  .fn(async () => {
-    const context = getContext();
-    return context.foo;
-  });
-const fn2 = await createContract('myService#fn2')
+const { createContract, getContext, runWithContext } = initialize<Context>();
+const fn = createContract('myService#fn2')
   .params()
   .fn(async () => {
     return new Promise(resolve =>
       setTimeout(() => {
-        resolve(fn1());
+        const context = getContext();
+        resolve(context.foo);
       }, 0)
     );
   });
@@ -325,13 +357,13 @@ await runWithContext(
     foo: 'bar',
   },
   async () => {
-    await fn2(); // returns 'bar'
+    await fn(); // returns 'bar'
   }
 )
 ```
 
 5. `ContractError` if an error occurs, a `ContractError` will be thrown.  
-It contains following properties:
+It contains the following properties:
 - `original: Error` - the original error.
 - `entries: MethodEntry[]` - the call stack of all contracts entries. Each entry contains:
   - `signature: string` - the contract signature.
@@ -354,6 +386,10 @@ Most of the services are usually small, and there is 1:1 mapping between them an
 3. Why bindings are not provided by this library?  
   
 It's difficult to create a generic binding that will work well for all users. It's recommended to create a minimal binding that all only needed in your app.
+
+4. Is context stable?  
+  
+Yes, it's based on a native nodejs feature.
 
 ### License
 MIT

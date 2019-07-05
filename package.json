@@ -9,6 +9,7 @@
     "example1": "ts-node -T examples/example1.ts",
     "example2": "ts-node -T examples/example2.ts",
     "example3": "ts-node -T examples/example3.ts",
+    "example4": "ts-node -T examples/example4.ts",
     "lint": "tslint -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
     "test": "yarn run lint && yarn run tsc --noEmit && yarn run jest --coverage --no-cache"
   },
