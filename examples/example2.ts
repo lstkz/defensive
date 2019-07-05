@@ -1,6 +1,8 @@
-// import { createContract } from 'defensive';
-import { createContract } from '../src';
+// import { initialize } from 'defensive';
+import { initialize } from '../src';
 import { V } from 'veni';
+
+const { createContract } = initialize();
 
 // UserService.ts
 

@@ -2,10 +2,9 @@
 
 
 `defensive` is a TypeScript library for creating contracts (aka services) with a proper validation and logging.  
-It depends on [veni](https://github.com/BetterCallSky/veni) (validator) and [bunyan](https://github.com/trentm/node-bunyan) (logger)  
+It depends on [veni](https://github.com/BetterCallSky/veni) (validator).
 
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/BetterCallSky/defensive.svg)](https://greenkeeper.io/)
 [![Travis](https://img.shields.io/travis/BetterCallSky/defensive.svg)](https://travis-ci.org/BetterCallSky/defensive)
 [![codecov](https://codecov.io/gh/BetterCallSky/defensive/branch/master/graph/badge.svg)](https://codecov.io/gh/BetterCallSky/defensive)
 [![Dev Dependencies](https://david-dm.org/BetterCallSky/defensive/dev-status.svg)](https://david-dm.org/BetterCallSky/defensive?type=dev)
@@ -32,11 +31,11 @@ There are many existing libraries for data validation that rely heavily on decor
 - Input validation and normalization (example: string type `"2"` to number type `2`).
 - Input logging (input parameters):
 ```
-myService: ENTER methodName: {param1: 'foo', param2: 'bar'}
+ENTER myService#methodName: {param1: 'foo', param2: 'bar'}
 ```
-- Output logging (sync and async):
+- Output logging:
 ```
-myService:  EXIT methodName: {result: 'foobar', anotherProp: 'bar'}
+EXIT myService#methodName: {result: 'foobar', anotherProp: 'bar'}
 ```
 - Error logging with input parameters (see example below).
 - Bindings to 3rd party frameworks (see example below).
@@ -53,89 +52,70 @@ yarn add defensive
 ## Example usage 
 
 ```ts
+// contract.ts
+export const { createContract } = initialize();
+
 // services/CalcService.ts
-import { createContract } from 'defensive';
 import { V } from 'veni';
+import { createContract } from './contract';
 
 export const add = createContract('CalcService#add')
-  .options({ sync: true })
   .params('a', 'b')
   .schema({
     a: V.number(),
     b: V.number(),
   })
-  .fn((a, b) => a + b);
+  .fn(async (a, b) => a + b);
 
-add(1, 3); // returns 4
-add('5' as any, '6' as any); // returns 11, input parameters are converted to number types
-add('1' as any, { foo: 'bar' } as any); // logs and throws an error
-
+(async function main() {
+  try {
+    await add(1, 3); // returns 4
+    await add('5' as any, '6' as any); // returns 11, input parameters are converted to number types
+    await add('1' as any, { foo: 'bar' } as any); // throws an error
+    // NOTE: you shouldn't use casting `as any` in your code. It's used only for a demonstration purpose.
+    // The service is expected to be called with unknown input (for example: req.body).
+  } catch (e) {
+    console.error(e);
+  }
+})();
 ```
-
-use service
-```ts
-// app.ts
-import { add } from './services/CalcService';
-
-
-add(1, 3); // returns 4
-add('5' as any, '6' as any); // returns 11, input parameters are converted to number types
-add('1' as any, { foo: 'bar' } as any); // logs and throws an error
-// NOTE: you shouldn't use casting `as any` in your code. It's used only for a demonstration purpose.
-// The service is expected to be called with unknown input (for example: req.body).
 ```
-
-![Alt text](./.github/example1.png)
+$ ts-node -T examples/example1.ts
+ENTER CalcService#add: { a: 1, b: 3 }
+EXIT CalcService#add: 4
+ENTER CalcService#add: { a: '5', b: '6' }
+EXIT CalcService#add: 11
+ENTER CalcService#add: { a: '1', b: { foo: 'bar' } }
+{ Error: ContractError: Validation error: 'b' must be a number.
+    at wrappedFunction (/Users/sky/work/npm/defensive/src/_createContract.ts:81:17)
+    at process._tickCallback (internal/process/next_tick.js:68:7)
+    at Function.Module.runMain (internal/modules/cjs/loader.js:744:11)
+    at Object.<anonymous> (/Users/sky/.nvm/versions/node/v10.12.0/lib/node_modules/ts-node/src/bin.ts:158:12)
+    at Module._compile (internal/modules/cjs/loader.js:688:30)
+    at Object.Module._extensions..js (internal/modules/cjs/loader.js:699:10)
+    at Module.load (internal/modules/cjs/loader.js:598:32)
+    at tryModuleLoad (internal/modules/cjs/loader.js:537:12)
+    at Function.Module._load (internal/modules/cjs/loader.js:529:3)
+    at Function.Module.runMain (internal/modules/cjs/loader.js:741:12)
+  original:
+   { Error: Validation error: 'b' must be a number.
+       at new ValidationError (/Users/sky/work/npm/defensive/node_modules/veni/ValidationError.js:19:28)
+       at Object.exports.validate (/Users/sky/work/npm/defensive/node_modules/veni/validate.js:37:21)
+       at /Users/sky/work/npm/defensive/src/wrapValidate.ts:17:24
+       at logDecorator (/Users/sky/work/npm/defensive/src/wrapLog.ts:40:26)
+       at hook.runInNewScope (/Users/sky/work/npm/defensive/src/_createContract.ts:67:52)
+       at AsyncResource.runInAsyncScope (async_hooks.js:188:21)
+       at ContractHook.runInNewScope (/Users/sky/work/npm/defensive/src/ContractHook.ts:45:26)
+       at wrappedFunction (/Users/sky/work/npm/defensive/src/_createContract.ts:67:32)
+       at main (/Users/sky/work/npm/defensive/examples/example1.ts:23:11)
+       at process._tickCallback (internal/process/next_tick.js:68:7) errors: [ [Object] ] },
+  entries:
+   [ { signature: 'CalcService#add',
+       input: '{ a: \'1\', b: { foo: \'bar\' } }' } ] }
+```
 
 See example under `examples/example1.ts`. Run it using `npm run example1`.
 
-
-## Async example usage
-
-file `services/UserService.ts`
-```ts
-import { createContract } from 'defensive';
-import { V } from 'veni';
-
-// UserService.ts
-
-export const createUser = createContract('UserService#createUser')
-  .params('values')
-  .schema({
-    values: V.object().keys({
-      name: V.string().optional(),
-      email: V.string().email(),
-      password: V.string().min(5),
-    }),
-  })
-  .fn(async values => {
-    // do something with values
-    // UserModel.create(values);
-    const id = 1;
-    return id;
-  });
-```
-use service
-
-```ts
-// app.ts
-import { createUser } from './services/UserService';
-
-await createUser({
-  name: 'john',
-  email: 'john@example.com',
-  password: 'secret',
-}); // ok
-await createUser({
-  name: 'john',
-  email: 'invalid email',
-  password: 'secret',
-}); // throws an error
-```
-
-![Alt text](./.github/example2.png)
-
-See example under `examples/example2.ts`. Run it using `npm run example2`.  
 
 ## Removing security information
 By default properties `password`, `token`, `accessToken` are removed from logging.  
@@ -158,8 +138,11 @@ const hashPassword = createContract('SecurityService#hashPassword')
 
 hashPassword('secret-password');
 ```
-
-![Alt text](./.github/example3.png)
+``
+$ ts-node -T examples/example3.ts
+ENTER SecurityService#hashPassword: { password: '<removed>' }
+EXIT SecurityService#hashPassword: 'ba817ef716'
+``
 
 See example under `examples/example3.ts`. Run it using `npm run example3`.
 
@@ -178,7 +161,6 @@ Only properties are logged: `statusCode`, `header`.
 
 ```ts
 createContract('CalcService#add')
-  .options({ sync: true })
   .params('foo')
   .schema({
     foo: V.object(),
