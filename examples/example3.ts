@@ -47,15 +47,15 @@ export const getUser = createContract('User#getUser')
     auth: true,
     method: 'get',
     path: '/users/me',
-    handler(req, res) {
-      res.json(getUser((req as any).user.id));
+    async handler(req, res) {
+      res.json(await getUser((req as any).user.id));
     },
   })
   .express({
     method: 'get',
     path: '/users/:id',
-    handler(req, res) {
-      res.json(getUser(req.params.id));
+    async handler(req, res) {
+      res.json(await getUser(req.params.id));
     },
   });
 

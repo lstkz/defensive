@@ -109,8 +109,13 @@ ENTER CalcService#add: { a: '1', b: { foo: 'bar' } }
        at AsyncResource.runInAsyncScope (async_hooks.js:188:21)
        at ContractHook.runInNewScope (/defensive/src/ContractHook.ts:45:26)
        at wrappedFunction (/defensive/src/_createContract.ts:67:32)
-       at main (/defensive/examples/example1.ts:23:11)
-       at process._tickCallback (internal/process/next_tick.js:68:7) errors: [ [Object] ] },
+       at main (/defensive/examples/example1.ts:24:11)
+       at process._tickCallback (internal/process/next_tick.js:68:7)
+     errors:
+      [ { type: 'number.base',
+          message: 'must be a number',
+          path: [ 'b' ],
+          value: { foo: 'bar' } } ] },
   entries:
    [ { signature: 'CalcService#add',
        input: '{ a: \'1\', b: { foo: \'bar\' } }' } ] }
@@ -121,7 +126,7 @@ See example under `examples/example1.ts`. Run it using `npm run example1`.
 
 ## Removing security information
 By default properties `password`, `token`, `accessToken` are removed from logging.  
-Additionally you set options to `{removeOutput: true}` to remove the method result.  
+Additionally you can set options to `{removeOutput: true}` to remove the method result.  
 Example:
 
 file `services/SecurityService.ts`
@@ -140,22 +145,13 @@ const hashPassword = createContract('SecurityService#hashPassword')
 
 hashPassword('secret-password');
 ```
-``
+```
 $ ts-node -T examples/example2.ts
 ENTER SecurityService#hashPassword: { password: '<removed>' }
 EXIT SecurityService#hashPassword: 'ba817ef716'
-``
+```
 
 See example under `examples/example2.ts`. Run it using `npm run example2`.
-
-
-### Special properties
-if the parameter name is `req` it's assumed that the object is an express request.  
-Only properties are logged: `method`, `url`, `headers`, `remoteAddress`, `remotePort`.  
-
-
-if the parameter name is `res` it's assumed that the object is an express response.  
-Only properties are logged: `statusCode`, `header`.  
 
 ### Notes
 - The wrapped function must have 0-4 arguments. 
@@ -228,15 +224,15 @@ export const getUser = createContract('User#getUser')
     auth: true,
     method: 'get',
     path: '/users/me',
-    handler(req, res) {
-      res.json(getUser(req.user.id));
+    async handler(req, res) {
+      res.json(await getUser((req as any).user.id));
     },
   })
   .express({
     method: 'get',
     path: '/users/:id',
-    handler(req, res) {
-      res.json(getUser(req.params.id));
+    async handler(req, res) {
+      res.json(await getUser(req.params.id));
     },
   });
 
@@ -261,12 +257,7 @@ getUser.expressOptions.forEach(options => {
 ### API
 1. `initialize` - initialize the library.
 ```ts
-const {
-  createContract,
-  runWithContext,
-  getContext,
-  disable
-  } = initialize({
+const { createContract, runWithContext, getContext, disable } = initialize({
   // an array of fields to be removed when formatting input or output
   removeFields: ['password', 'token', 'accessToken'],
   // true if enable debugEnter and debugExit, it can be disabled in production
@@ -285,7 +276,7 @@ const {
   debugExit: (signature, formattedOutput) => {
     console.log(`EXIT ${signature}:`, formattedOutput);
   },
-})
+});
 ```
 2. `createContract` - create a new contract.
 ```ts

@@ -25,26 +25,11 @@ function _sanitizeObject(config: ContractConfig, obj: any) {
       if (config.removeFields.indexOf(name) !== -1) {
         return '<removed>';
       }
-      if (name === 'req' && value && value.connection) {
-        return {
-          method: value.method,
-          url: value.url,
-          headers: value.headers,
-          remoteAddress: value.connection.remoteAddress,
-          remotePort: value.connection.remotePort,
-        };
-      }
-      if (name === 'res' && value && value.statusCode) {
-        return {
-          statusCode: value.statusCode,
-          header: value._header,
-        };
-      }
       if (Array.isArray(value) && value.length > config.maxArrayLength) {
         return `Array(${value.length})`;
       }
       return value;
-    }),
+    })
   );
 }
 
