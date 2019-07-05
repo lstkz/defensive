@@ -92,7 +92,7 @@ ENTER CalcService#add: { a: '1', b: { foo: 'bar' } }
     at wrappedFunction (/defensive/src/_createContract.ts:81:17)
     at process._tickCallback (internal/process/next_tick.js:68:7)
     at Function.Module.runMain (internal/modules/cjs/loader.js:744:11)
-    at Object.<anonymous> (/Users/sky/.nvm/versions/node/v10.12.0/lib/node_modules/ts-node/src/bin.ts:158:12)
+    at Object.<anonymous> (/.nvm/versions/node/v10.12.0/lib/node_modules/ts-node/src/bin.ts:158:12)
     at Module._compile (internal/modules/cjs/loader.js:688:30)
     at Object.Module._extensions..js (internal/modules/cjs/loader.js:699:10)
     at Module.load (internal/modules/cjs/loader.js:598:32)
@@ -177,7 +177,7 @@ Example binding for Express
 ```ts
 import { initialize, ContractBinding } from 'defensive';
 import { V } from 'veni';
-import { Request, Response, default as express } from 'express';
+import { Request, Response, default as express, Handler } from 'express';
 
 const { createContract } = initialize();
 
@@ -196,10 +196,10 @@ interface ExpressOptions {
   auth?: boolean;
   method: 'get' | 'post' | 'put' | 'delete' | 'patch';
   path: string;
-  handler(req: Request, res: Response): void;
+  handler(req: Request, res: Response): Promise<void>;
 }
 
-declare module 'defensive' {
+declare module '../src' {
   interface ContractBinding<T> {
     expressOptions: ExpressOptions[];
     express(options: ExpressOptions): T & ContractBinding<T>;
@@ -246,7 +246,11 @@ const authMiddleware = (req: Request, res: Response) => {
 };
 
 getUser.expressOptions.forEach(options => {
-  const middleware = [options.handler];
+  const middleware: Handler[] = [
+    (req, res, next) => {
+      options.handler(req, res).catch(next);
+    },
+  ];
   if (options.auth) {
     middleware.unshift(authMiddleware);
   }
@@ -325,6 +329,14 @@ await runWithContext(
   }
 )
 ```
+
+5. `ContractError` if an error occurs, a `ContractError` will be thrown.  
+It contains following properties:
+- `original: Error` - the original error.
+- `entries: MethodEntry[]` - the call stack of all contracts entries. Each entry contains:
+  - `signature: string` - the contract signature.
+  - `input: string` - the serialized input.
+
 
 ## FAQ
 1. Why can't I just use [express validator](https://express-validator.github.io/docs/) and write code directly in controllers?  

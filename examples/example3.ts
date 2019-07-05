@@ -1,6 +1,6 @@
 import { initialize, ContractBinding } from '../src';
 import { V } from 'veni';
-import { Request, Response, default as express } from 'express';
+import { Request, Response, default as express, Handler } from 'express';
 
 const { createContract } = initialize();
 
@@ -19,7 +19,7 @@ interface ExpressOptions {
   auth?: boolean;
   method: 'get' | 'post' | 'put' | 'delete' | 'patch';
   path: string;
-  handler(req: Request, res: Response): void;
+  handler(req: Request, res: Response): Promise<void>;
 }
 
 declare module '../src' {
@@ -69,7 +69,11 @@ const authMiddleware = (req: Request, res: Response) => {
 };
 
 getUser.expressOptions.forEach(options => {
-  const middleware = [options.handler];
+  const middleware: Handler[] = [
+    (req, res, next) => {
+      options.handler(req, res).catch(next);
+    },
+  ];
   if (options.auth) {
     middleware.unshift(authMiddleware);
   }
