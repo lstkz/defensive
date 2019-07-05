@@ -34,40 +34,6 @@ it('circular', () => {
     `"{ foo: 'a', bar: 123, obj: '[Circular]' }"`
   );
 });
-it('req', () => {
-  const obj = {
-    req: {
-      method: 'GET',
-      url: '/foo',
-      headers: {},
-      connection: {
-        remoteAddress: '::0',
-        remotePort: 1234,
-      },
-      extraProp: 'foo',
-    },
-  };
-  expect(serializeObject(globalConfig, obj)).toMatchInlineSnapshot(`
-"{ req:
-   { method: 'GET',
-     url: '/foo',
-     headers: {},
-     remoteAddress: '::0',
-     remotePort: 1234 } }"
-`);
-});
-it('res', () => {
-  const obj = {
-    res: {
-      statusCode: 200,
-      _header: {},
-      extraProp: 'foo',
-    },
-  };
-  expect(serializeObject(globalConfig, obj)).toMatchInlineSnapshot(
-    `"{ res: { statusCode: 200, header: {} } }"`
-  );
-});
 it('many items', () => {
   const obj = {
     longArray: new Array(400),
