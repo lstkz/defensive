@@ -2,9 +2,7 @@
   "name": "defensive",
   "version": "0.1.0",
   "description": "",
-  "main": "dist/commonjs/index.js",
-  "module": "dist/es/index.js",
-  "jsnext:main": "dist/es/index.js",
+  "module": "dist/index.js",
   "scripts": {
     "example1": "ts-node -T examples/example1.ts",
     "example2": "ts-node -T examples/example2.ts",

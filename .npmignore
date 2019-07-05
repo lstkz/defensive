@@ -2,3 +2,5 @@ scripts
 coverage
 __tests__
 .gitbook
+.github
+examples
