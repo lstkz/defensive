@@ -1,15 +1,19 @@
 import { serializeObject } from '../src/serializeObject';
+import { ContractConfig } from '../src/types';
 
-const globalConfig = {
+const globalConfig: ContractConfig = {
   removeFields: ['password', 'token', 'accessToken'],
   debug: true,
   depth: 4,
   maxArrayLength: 30,
-  getLogger(serviceName: string) {
-    return null as any;
+  debugEnter: () => {
+    //
   },
-  getNextId: () => 0,
+  debugExit: () => {
+    //
+  },
 };
+
 it('serialize undefined', () => {
   expect(serializeObject(globalConfig, undefined)).toMatchInlineSnapshot(
     `"undefined"`
@@ -28,40 +32,6 @@ it('circular', () => {
   obj.obj = obj;
   expect(serializeObject(globalConfig, obj)).toMatchInlineSnapshot(
     `"{ foo: 'a', bar: 123, obj: '[Circular]' }"`
-  );
-});
-it('req', () => {
-  const obj = {
-    req: {
-      method: 'GET',
-      url: '/foo',
-      headers: {},
-      connection: {
-        remoteAddress: '::0',
-        remotePort: 1234,
-      },
-      extraProp: 'foo',
-    },
-  };
-  expect(serializeObject(globalConfig, obj)).toMatchInlineSnapshot(`
-"{ req: 
-   { method: 'GET',
-     url: '/foo',
-     headers: {},
-     remoteAddress: '::0',
-     remotePort: 1234 } }"
-`);
-});
-it('res', () => {
-  const obj = {
-    res: {
-      statusCode: 200,
-      _header: {},
-      extraProp: 'foo',
-    },
-  };
-  expect(serializeObject(globalConfig, obj)).toMatchInlineSnapshot(
-    `"{ res: { statusCode: 200, header: {} } }"`
   );
 });
 it('many items', () => {

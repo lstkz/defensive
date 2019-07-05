@@ -1,5 +1,4 @@
-import { V, Schema, Convert } from 'veni';
-import * as Logger from 'bunyan';
+import { Schema, Convert } from 'veni';
 import { ContractBinding } from './index';
 
 interface Contract4<
@@ -119,7 +118,6 @@ export interface Contract {
 }
 
 export interface ContractOptions {
-  sync: boolean;
   removeOutput: boolean;
 }
 
@@ -128,6 +126,11 @@ export interface ContractConfig {
   debug: boolean;
   depth: number;
   maxArrayLength: number;
-  getLogger: (serviceName: string) => Logger;
-  getNextId: () => number;
+  debugEnter: (signature: string, formattedInput: string) => void;
+  debugExit: (signature: string, formattedOutput: string) => void;
+}
+
+export interface MethodEntry {
+  signature: string;
+  input: string;
 }

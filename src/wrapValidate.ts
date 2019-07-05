@@ -1,29 +1,20 @@
-import { V, SchemaLike, getValidateResult, validate, SchemaMap } from 'veni';
+import { V, validate, SchemaMap } from 'veni';
 import { combineObject } from './combineObject';
 
 export interface WrapValidateOptions<T> {
   keysSchema: SchemaMap | null;
   method: T;
   paramNames: string[];
-  sync: boolean;
 }
 
 export function wrapValidate<T extends (...args: any[]) => any>(
   options: WrapValidateOptions<T>
 ): T {
-  const { keysSchema, method, paramNames, sync } = options;
+  const { keysSchema, method, paramNames } = options;
 
-  return (((...args: any[]) => {
+  return ((async (...args: any[]) => {
     const value = combineObject(paramNames, args);
-    let normalized: any;
-    try {
-      normalized = validate(value, V.object().keys(keysSchema || {}));
-    } catch (e) {
-      if (sync) {
-        throw e;
-      }
-      return Promise.reject(e);
-    }
+    const normalized = validate(value, V.object().keys(keysSchema || {}));
     const newArgs: any[] = [];
     // V will normalize values
     // for example string number '1' to 1
