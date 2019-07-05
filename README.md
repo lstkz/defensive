@@ -2,7 +2,8 @@
 
 
 `defensive` is a TypeScript library for creating contracts (aka services) with a proper validation and logging.  
-It depends on [veni](https://github.com/BetterCallSky/veni) (validator).
+It depends on [veni](https://github.com/BetterCallSky/veni) (validator).  
+Only node v10 and v12 are supported.
 
 
 [![Travis](https://img.shields.io/travis/BetterCallSky/defensive.svg)](https://travis-ci.org/BetterCallSky/defensive)
@@ -58,6 +59,7 @@ export const { createContract } = initialize();
 // services/CalcService.ts
 import { V } from 'veni';
 import { createContract } from './contract';
+import util from 'util';
 
 export const add = createContract('CalcService#add')
   .params('a', 'b')
@@ -75,7 +77,7 @@ export const add = createContract('CalcService#add')
     // NOTE: you shouldn't use casting `as any` in your code. It's used only for a demonstration purpose.
     // The service is expected to be called with unknown input (for example: req.body).
   } catch (e) {
-    console.error(e);
+    console.error(util.inspect(e, { depth: null }));
   }
 })();
 ```
@@ -87,7 +89,7 @@ ENTER CalcService#add: { a: '5', b: '6' }
 EXIT CalcService#add: 11
 ENTER CalcService#add: { a: '1', b: { foo: 'bar' } }
 { Error: ContractError: Validation error: 'b' must be a number.
-    at wrappedFunction (/Users/sky/work/npm/defensive/src/_createContract.ts:81:17)
+    at wrappedFunction (/defensive/src/_createContract.ts:81:17)
     at process._tickCallback (internal/process/next_tick.js:68:7)
     at Function.Module.runMain (internal/modules/cjs/loader.js:744:11)
     at Object.<anonymous> (/Users/sky/.nvm/versions/node/v10.12.0/lib/node_modules/ts-node/src/bin.ts:158:12)
@@ -99,15 +101,15 @@ ENTER CalcService#add: { a: '1', b: { foo: 'bar' } }
     at Function.Module.runMain (internal/modules/cjs/loader.js:741:12)
   original:
    { Error: Validation error: 'b' must be a number.
-       at new ValidationError (/Users/sky/work/npm/defensive/node_modules/veni/ValidationError.js:19:28)
-       at Object.exports.validate (/Users/sky/work/npm/defensive/node_modules/veni/validate.js:37:21)
-       at /Users/sky/work/npm/defensive/src/wrapValidate.ts:17:24
-       at logDecorator (/Users/sky/work/npm/defensive/src/wrapLog.ts:40:26)
-       at hook.runInNewScope (/Users/sky/work/npm/defensive/src/_createContract.ts:67:52)
+       at new ValidationError (/defensive/node_modules/veni/ValidationError.js:19:28)
+       at Object.exports.validate (/defensive/node_modules/veni/validate.js:37:21)
+       at /defensive/src/wrapValidate.ts:17:24
+       at logDecorator (/defensive/src/wrapLog.ts:40:26)
+       at hook.runInNewScope (/defensive/src/_createContract.ts:67:52)
        at AsyncResource.runInAsyncScope (async_hooks.js:188:21)
-       at ContractHook.runInNewScope (/Users/sky/work/npm/defensive/src/ContractHook.ts:45:26)
-       at wrappedFunction (/Users/sky/work/npm/defensive/src/_createContract.ts:67:32)
-       at main (/Users/sky/work/npm/defensive/examples/example1.ts:23:11)
+       at ContractHook.runInNewScope (/defensive/src/ContractHook.ts:45:26)
+       at wrappedFunction (/defensive/src/_createContract.ts:67:32)
+       at main (/defensive/examples/example1.ts:23:11)
        at process._tickCallback (internal/process/next_tick.js:68:7) errors: [ [Object] ] },
   entries:
    [ { signature: 'CalcService#add',
@@ -139,12 +141,12 @@ const hashPassword = createContract('SecurityService#hashPassword')
 hashPassword('secret-password');
 ```
 ``
-$ ts-node -T examples/example3.ts
+$ ts-node -T examples/example2.ts
 ENTER SecurityService#hashPassword: { password: '<removed>' }
 EXIT SecurityService#hashPassword: 'ba817ef716'
 ``
 
-See example under `examples/example3.ts`. Run it using `npm run example3`.
+See example under `examples/example2.ts`. Run it using `npm run example2`.
 
 
 ### Special properties
@@ -177,9 +179,11 @@ For example: you can create your own binding for an express app, graphql app, ka
 
 Example binding for Express  
 ```ts
-import { createContract, ContractBinding } from 'defensive';
+import { initialize, ContractBinding } from 'defensive';
 import { V } from 'veni';
 import { Request, Response, default as express } from 'express';
+
+const { createContract } = initialize();
 
 // Creating binding definition
 // bindings.ts
@@ -252,6 +256,83 @@ getUser.expressOptions.forEach(options => {
   }
   app[options.method](options.path, ...middleware);
 });
+```
+
+### API
+1. `initialize` - initialize the library.
+```ts
+const {
+  createContract,
+  runWithContext,
+  getContext,
+  disable
+  } = initialize({
+  // an array of fields to be removed when formatting input or output
+  removeFields: ['password', 'token', 'accessToken'],
+  // true if enable debugEnter and debugExit, it can be disabled in production
+  debug: true,
+  // the object depth when serializing nested object
+  depth: 4,
+  // the max array length to be serialized
+  maxArrayLength: 30,
+  // the function for handling ENTER event
+  // formattedInput is a serialized contract input
+  debugEnter: (signature, formattedInput) => {
+    console.log(`ENTER ${signature}:`, formattedInput);
+  },
+  // the function for handling EXI event
+  // formattedOutput is a serialized contract output
+  debugExit: (signature, formattedOutput) => {
+    console.log(`EXIT ${signature}:`, formattedOutput);
+  },
+})
+```
+2. `createContract` - create a new contract.
+```ts
+const add = createContract('CalcService#add') // the function signature
+  .params('a', 'b') // input parameter names
+  .schema({
+    a: V.number(), // validation schema for each defined param
+    b: V.number(), // names must match
+  })
+  .fn(async (a, b) => a + b) // the implementation
+```
+3. `runWithContext` - run the given function with a given context.
+```ts
+const context = { user: { id: 1 } };
+await runWithContext(context, async () => {
+  await add(1, 2);
+})
+```
+
+4. `getContext` - get current context or throw an error if not set. The parent function must call `runWithContext`.
+```ts
+const { createContract, getContext, runWithContext } = initialize<Context>({
+  debug: false,
+});
+const fn1 = await createContract('myService#fn1')
+  .params()
+  .fn(async () => {
+    const context = getContext();
+    return context.foo;
+  });
+const fn2 = await createContract('myService#fn2')
+  .params()
+  .fn(async () => {
+    return new Promise(resolve =>
+      setTimeout(() => {
+        resolve(fn1());
+      }, 0)
+    );
+  });
+await runWithContext(
+  {
+    foo: 'bar',
+  },
+  async () => {
+    await fn2(); // returns 'bar'
+  }
+)
 ```
 
 ## FAQ
