@@ -8,7 +8,6 @@ Only node v10 and v12 are supported.
 
 [![Travis](https://img.shields.io/travis/BetterCallSky/defensive.svg)](https://travis-ci.org/BetterCallSky/defensive)
 [![codecov](https://codecov.io/gh/BetterCallSky/defensive/branch/master/graph/badge.svg)](https://codecov.io/gh/BetterCallSky/defensive)
-[![Dev Dependencies](https://david-dm.org/BetterCallSky/defensive/dev-status.svg)](https://david-dm.org/BetterCallSky/defensive?type=dev)
 
 
 ### About
